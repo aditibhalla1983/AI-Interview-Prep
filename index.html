@@ -7,209 +7,99 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Syne', sans-serif;
-      background: #070b14;
-      color: #e8edf5;
-      min-height: 100vh;
-    }
-
+    body { font-family: 'Syne', sans-serif; background: #070b14; color: #e8edf5; min-height: 100vh; }
     .bg-grid {
       position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background-image:
-        linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+      background-image: linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
       background-size: 40px 40px;
     }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
+    #page-loader {
+      position: fixed; inset: 0; background: #070b14;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 16px;
     }
+    .spinner { width: 40px; height: 40px; border: 3px solid #1a2840; border-top-color: #00e5a0; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    #page-loader p { font-family: 'DM Mono', monospace; font-size: 13px; color: #4a6080; }
 
-    /* TOAST */
-    #toast {
-      display: none; position: fixed; top: 18px; right: 18px; z-index: 1000;
-      padding: 11px 20px; border-radius: 8px; font-family: 'DM Mono', monospace;
-      font-size: 13px; font-weight: 700; color: #07111e;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      animation: fadeUp 0.3s ease;
-    }
+    #toast { display: none; position: fixed; top: 18px; right: 18px; z-index: 1000; padding: 11px 20px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; color: #07111e; box-shadow: 0 4px 20px rgba(0,0,0,0.5); animation: fadeUp 0.3s ease; }
 
-    /* MODAL */
-    #modal-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(7,11,20,0.88);
-      z-index: 999; align-items: center; justify-content: center;
-    }
+    #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(7,11,20,0.88); z-index: 999; align-items: center; justify-content: center; }
     #modal-overlay.show { display: flex; }
-    .modal-box {
-      background: #0d1220; border: 1px solid #1a2840; border-radius: 16px;
-      padding: 32px; text-align: center; max-width: 320px; width: 90%;
-    }
+    .modal-box { background: #0d1220; border: 1px solid #1a2840; border-radius: 16px; padding: 32px; text-align: center; max-width: 320px; width: 90%; }
     .modal-box h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
     .modal-box p  { color: #6b7d9a; font-size: 14px; margin-bottom: 24px; }
     .modal-btns   { display: flex; gap: 12px; justify-content: center; }
 
-    /* HEADER */
-    header {
-      position: relative; z-index: 1;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 14px;
-      padding: 24px 32px;
-      border-bottom: 1px solid #0e1828;
-      background: linear-gradient(180deg, #0a0f1e, transparent);
-    }
+    header { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding: 24px 32px; border-bottom: 1px solid #0e1828; background: linear-gradient(180deg, #0a0f1e, transparent); }
     .brand { display: flex; align-items: center; gap: 8px; font-size: 26px; font-weight: 800; color: #00e5a0; }
     .brand span { color: #e8edf5; }
     .brand span em { color: #00e5a0; font-style: normal; }
     .brand-sub { font-family: 'DM Mono', monospace; font-size: 12px; color: #4a6080; letter-spacing: 0.05em; margin-top: 4px; }
     .header-right { display: flex; align-items: center; gap: 20px; }
     .stat-box { text-align: center; }
-    .stat-num  { font-size: 28px; font-weight: 800; color: #00e5a0; line-height: 1; }
-    .stat-lbl  { font-family: 'DM Mono', monospace; font-size: 10px; color: #4a6080; letter-spacing: 0.1em; }
+    .stat-num { font-size: 28px; font-weight: 800; color: #00e5a0; line-height: 1; }
+    .stat-lbl { font-family: 'DM Mono', monospace; font-size: 10px; color: #4a6080; letter-spacing: 0.1em; }
+    .db-status { display: flex; align-items: center; gap: 7px; font-family: 'DM Mono', monospace; font-size: 11px; color: #4a6080; }
+    .db-dot { width: 8px; height: 8px; border-radius: 50%; background: #3d5270; }
+    .db-dot.connected { background: #00e5a0; box-shadow: 0 0 6px rgba(0,229,160,0.5); }
 
-    /* BUTTONS */
-    .btn-green {
-      padding: 11px 22px; border-radius: 9px;
-      background: linear-gradient(135deg, #00e5a0, #00b87a);
-      border: none; color: #07111e;
-      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
-      cursor: pointer; box-shadow: 0 4px 18px rgba(0,229,160,0.3);
-      transition: opacity 0.2s;
-    }
+    .btn-green { padding: 11px 22px; border-radius: 9px; background: linear-gradient(135deg, #00e5a0, #00b87a); border: none; color: #07111e; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 4px 18px rgba(0,229,160,0.3); transition: opacity 0.2s; }
     .btn-green:hover { opacity: 0.88; }
-    .btn-ghost {
-      padding: 9px 20px; border-radius: 8px;
-      border: 1px solid #1a2840; background: transparent;
-      color: #e8edf5; font-family: 'Syne', sans-serif; font-weight: 600;
-      font-size: 13px; cursor: pointer;
-    }
-    .btn-red {
-      padding: 9px 20px; border-radius: 8px; border: none;
-      background: #ff4d4d; color: #fff;
-      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer;
-    }
+    .btn-green:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost { padding: 9px 20px; border-radius: 8px; border: 1px solid #1a2840; background: transparent; color: #e8edf5; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer; }
+    .btn-red { padding: 9px 20px; border-radius: 8px; border: none; background: #ff4d4d; color: #fff; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; }
 
-    /* FORM */
-    #form-section {
-      display: none; position: relative; z-index: 1;
-      margin: 18px 32px;
-      background: #0a1020; border: 1px solid #1a2840; border-radius: 14px;
-      padding: 26px; animation: fadeUp 0.3s ease;
-    }
+    #form-section { display: none; position: relative; z-index: 1; margin: 18px 32px; background: #0a1020; border: 1px solid #1a2840; border-radius: 14px; padding: 26px; animation: fadeUp 0.3s ease; }
     #form-section.show { display: block; }
     #form-section h2 { font-size: 17px; font-weight: 800; color: #00e5a0; margin-bottom: 20px; }
-    .form-lbl {
-      font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 700;
-      color: #3d5270; letter-spacing: 0.12em; margin-bottom: 9px;
-    }
+    .form-lbl { font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 700; color: #3d5270; letter-spacing: 0.12em; margin-bottom: 9px; }
     .form-group { margin-bottom: 18px; }
     .tag-options { display: flex; flex-wrap: wrap; gap: 7px; }
-    .tag-opt {
-      padding: 5px 13px; border-radius: 6px; border: 1px solid #1a2840;
-      background: transparent; color: #4a6080;
-      font-family: 'Syne', sans-serif; font-weight: 600; font-size: 11px; cursor: pointer;
-      transition: all 0.15s;
-    }
+    .tag-opt { padding: 5px 13px; border-radius: 6px; border: 1px solid #1a2840; background: transparent; color: #4a6080; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 11px; cursor: pointer; transition: all 0.15s; }
     .tag-opt.active { border-color: #00e5a0; color: #00e5a0; background: rgba(0,229,160,0.08); }
-    textarea, input[type=text] {
-      width: 100%; background: #060c18; border: 1px solid #1a2840; border-radius: 9px;
-      padding: 12px 14px; color: #e8edf5;
-      font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.6;
-      transition: border-color 0.2s;
-    }
+    textarea, input[type=text] { width: 100%; background: #060c18; border: 1px solid #1a2840; border-radius: 9px; padding: 12px 14px; color: #e8edf5; font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.6; transition: border-color 0.2s; }
     textarea { resize: vertical; }
     textarea:focus, input:focus { outline: none; border-color: #00e5a0; }
     .form-footer { display: flex; justify-content: flex-end; margin-top: 4px; }
 
-    /* CONTROLS */
-    #controls {
-      position: relative; z-index: 1;
-      padding: 16px 32px 0;
-      display: flex; flex-direction: column; gap: 10px;
-    }
+    #controls { position: relative; z-index: 1; padding: 16px 32px 0; display: flex; flex-direction: column; gap: 10px; }
     .search-wrap { position: relative; max-width: 460px; }
     .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #3d5270; font-size: 17px; pointer-events: none; }
-    #search-input {
-      padding-left: 38px; font-family: 'DM Mono', monospace;
-      font-size: 12px; border-radius: 9px;
-    }
+    #search-input { padding-left: 38px; font-family: 'DM Mono', monospace; font-size: 12px; border-radius: 9px; }
     .filter-row { display: flex; flex-wrap: wrap; gap: 7px; }
-    .f-tag {
-      padding: 5px 13px; border-radius: 20px; border: 1px solid #1a2840;
-      background: transparent; color: #4a6080;
-      font-family: 'Syne', sans-serif; font-weight: 600; font-size: 11px; cursor: pointer;
-      transition: all 0.15s;
-    }
+    .f-tag { padding: 5px 13px; border-radius: 20px; border: 1px solid #1a2840; background: transparent; color: #4a6080; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 11px; cursor: pointer; transition: all 0.15s; }
     .f-tag.active { border-color: #00e5a0; color: #00e5a0; background: rgba(0,229,160,0.08); }
     #results-bar { font-family: 'DM Mono', monospace; font-size: 12px; color: #3d5270; margin-top: 4px; }
     #results-bar span { color: #00e5a0; }
 
-    /* LIST */
-    #qa-list {
-      position: relative; z-index: 1;
-      padding: 14px 32px;
-      display: flex; flex-direction: column; gap: 9px;
-    }
+    #qa-list { position: relative; z-index: 1; padding: 14px 32px; display: flex; flex-direction: column; gap: 9px; }
     .empty { text-align: center; padding: 50px 20px; color: #3d5270; font-family: 'DM Mono', monospace; }
-    .empty .empty-icon { font-size: 34px; margin-bottom: 10px; }
+    .empty-icon { font-size: 34px; margin-bottom: 10px; }
 
-    /* CARD */
-    .card {
-      background: #080e1c; border: 1px solid #111d30; border-radius: 12px;
-      overflow: hidden; animation: fadeUp 0.4s ease both;
-    }
-    .card-head {
-      display: flex; align-items: center; gap: 12px;
-      padding: 15px 16px; cursor: pointer;
-      transition: background 0.15s;
-    }
+    .card { background: #080e1c; border: 1px solid #111d30; border-radius: 12px; overflow: hidden; animation: fadeUp 0.4s ease both; }
+    .card-head { display: flex; align-items: center; gap: 12px; padding: 15px 16px; cursor: pointer; transition: background 0.15s; }
     .card-head:hover { background: rgba(255,255,255,0.02); }
     .card-meta { min-width: 108px; display: flex; flex-direction: column; gap: 5px; }
-    .tag-pill {
-      display: inline-block; font-family: 'DM Mono', monospace; font-size: 9px;
-      font-weight: 700; color: #00e5a0; letter-spacing: 0.1em;
-      background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.2);
-      border-radius: 4px; padding: 3px 7px;
-    }
+    .tag-pill { display: inline-block; font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 700; color: #00e5a0; letter-spacing: 0.1em; background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.2); border-radius: 4px; padding: 3px 7px; }
     .card-date { font-family: 'DM Mono', monospace; font-size: 10px; color: #3d5270; }
     .card-q { flex: 1; display: flex; align-items: flex-start; gap: 11px; }
-    .q-badge, .a-badge {
-      flex-shrink: 0; width: 24px; height: 24px; border-radius: 5px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 800;
-    }
+    .q-badge, .a-badge { flex-shrink: 0; width: 24px; height: 24px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 800; }
     .q-badge { background: linear-gradient(135deg,#1a3a5c,#0e2438); border: 1px solid #1e3d5e; color: #5ba3e0; margin-top: 1px; }
     .a-badge { background: linear-gradient(135deg,#0e3326,#092419); border: 1px solid rgba(0,229,160,0.2); color: #00e5a0; margin-top: 2px; }
     .q-text { font-size: 14px; font-weight: 600; color: #c8d8ec; line-height: 1.55; }
     .chevron { font-size: 10px; color: #3d5270; flex-shrink: 0; margin-left: 8px; }
-    .card-body {
-      display: none; border-top: 1px solid #111d30;
-      padding: 16px; background: #060b18;
-    }
+    .card-body { display: none; border-top: 1px solid #111d30; padding: 16px; background: #060b18; }
     .card-body.open { display: block; animation: fadeUp 0.2s ease; }
     .answer-block { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 14px; }
     .a-text { font-family: 'DM Mono', monospace; font-size: 13px; color: #8aa8c8; line-height: 1.75; }
     .card-actions { display: flex; gap: 9px; justify-content: flex-end; }
-    .btn-edit {
-      padding: 6px 13px; border-radius: 6px; border: 1px solid #1a2840;
-      background: transparent; color: #5ba3e0;
-      font-family: 'Syne', sans-serif; font-weight: 600; font-size: 11px; cursor: pointer;
-    }
-    .btn-del-card {
-      padding: 6px 13px; border-radius: 6px; border: 1px solid rgba(255,77,77,0.2);
-      background: transparent; color: #ff6b6b;
-      font-family: 'Syne', sans-serif; font-weight: 600; font-size: 11px; cursor: pointer;
-    }
+    .btn-edit { padding: 6px 13px; border-radius: 6px; border: 1px solid #1a2840; background: transparent; color: #5ba3e0; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 11px; cursor: pointer; }
+    .btn-del-card { padding: 6px 13px; border-radius: 6px; border: 1px solid rgba(255,77,77,0.2); background: transparent; color: #ff6b6b; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 11px; cursor: pointer; }
 
-    footer {
-      position: relative; z-index: 1;
-      text-align: center; padding: 20px;
-      color: #2a3c54; font-size: 11px; font-family: 'DM Mono', monospace;
-      border-top: 1px solid #0a1020; margin-top: 16px;
-    }
-
+    footer { position: relative; z-index: 1; text-align: center; padding: 20px; color: #2a3c54; font-size: 11px; font-family: 'DM Mono', monospace; border-top: 1px solid #0a1020; margin-top: 16px; }
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: #0d1220; }
     ::-webkit-scrollbar-thumb { background: #1e2d4a; border-radius: 3px; }
@@ -217,44 +107,47 @@
 </head>
 <body>
 
-<div class="bg-grid"></div>
+<div id="page-loader">
+  <div class="spinner"></div>
+  <p>Connecting to Firebase...</p>
+</div>
 
-<!-- TOAST -->
+<div class="bg-grid"></div>
 <div id="toast"></div>
 
-<!-- DELETE MODAL -->
 <div id="modal-overlay">
   <div class="modal-box">
     <div style="font-size:38px;margin-bottom:12px">🗑</div>
     <h3>Delete this entry?</h3>
-    <p>This action cannot be undone.</p>
+    <p>This will be permanently deleted from Firebase.</p>
     <div class="modal-btns">
       <button class="btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn-red" onclick="confirmDelete()">Delete</button>
+      <button class="btn-red"   onclick="confirmDelete()">Delete</button>
     </div>
   </div>
 </div>
 
-<!-- HEADER -->
 <header>
   <div>
     <div class="brand">⬡ <span>AI<em>Prep</em></span></div>
     <div class="brand-sub">Daily Interview Question Tracker</div>
   </div>
   <div class="header-right">
+    <div class="db-status">
+      <div class="db-dot" id="db-dot"></div>
+      <span id="db-label">Connecting...</span>
+    </div>
     <div class="stat-box">
-      <div class="stat-num" id="total-count">0</div>
+      <div class="stat-num" id="total-count">—</div>
       <div class="stat-lbl">TOTAL Q&amp;As</div>
     </div>
     <button class="btn-green" onclick="toggleForm()">+ Add Q&amp;A</button>
   </div>
 </header>
 
-<!-- FORM -->
 <div id="form-section">
   <h2 id="form-title">✦ New Question</h2>
   <input type="hidden" id="edit-id" value=""/>
-
   <div class="form-group">
     <div class="form-lbl">TOPIC</div>
     <div class="tag-options" id="tag-options"></div>
@@ -272,7 +165,6 @@
   </div>
 </div>
 
-<!-- CONTROLS -->
 <div id="controls">
   <div class="search-wrap">
     <span class="search-icon">⌕</span>
@@ -282,222 +174,212 @@
   <div id="results-bar"></div>
 </div>
 
-<!-- LIST -->
 <div id="qa-list"></div>
 
-<footer>AIPrep Dashboard · <span id="year"></span></footer>
+<footer>AIPrep Dashboard · Firebase Edition · <span id="year"></span></footer>
 
-<script>
-  document.getElementById('year').textContent = new Date().getFullYear();
+<script type="module">
+  import { initializeApp }     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPr4QPX3Ay5BWWPNClvOqhghaGf6t10SY",
+    authDomain: "ai-prep-dashboard.firebaseapp.com",
+    projectId: "ai-prep-dashboard",
+    storageBucket: "ai-prep-dashboard.firebasestorage.app",
+    messagingSenderId: "524120618104",
+    appId: "1:524120618104:web:3883214b2345334cde698d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const COL = "questions";
 
   const TAGS = ["ML Fundamentals","Deep Learning","NLP","Computer Vision","Reinforcement Learning","MLOps","Statistics","System Design","Ethics & Safety","General AI"];
-  const STORAGE_KEY = 'ai-interview-qna';
+  let qas = [], filterTag = 'All', selectedTag = TAGS[0], deleteTargetId = null;
 
-  let qas = [];
-  let filterTag = 'All';
-  let selectedTag = TAGS[0];
-  let deleteTargetId = null;
+  document.getElementById('year').textContent = new Date().getFullYear();
 
-  // ── STORAGE ──────────────────────────────────────────────
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(qas));
-  }
-
-  function load() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      qas = JSON.parse(raw);
-    } else {
-      qas = [{
-        id: 's1',
-        question: 'What is the difference between supervised and unsupervised learning?',
-        answer: 'Supervised learning uses labeled data to train a model to map inputs to outputs (e.g. classification, regression). Unsupervised learning finds hidden patterns in unlabeled data (e.g. clustering, dimensionality reduction). The key difference is whether ground-truth labels guide the training process.',
-        date: new Date().toISOString().split('T')[0],
-        tag: 'ML Fundamentals'
-      }];
-      save();
-    }
-  }
-
-  // ── TOAST ─────────────────────────────────────────────────
+  // TOAST
   function showToast(msg, type='ok') {
     const t = document.getElementById('toast');
-    t.textContent = (type==='err' ? '⚠ ' : '✓ ') + msg;
+    t.textContent = (type==='err'?'⚠ ':'✓ ') + msg;
     t.style.background = type==='err' ? '#ff4d4d' : '#00e5a0';
     t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 3000);
+    setTimeout(()=> t.style.display='none', 3000);
   }
 
-  // ── MODAL ─────────────────────────────────────────────────
-  function openModal(id) {
-    deleteTargetId = id;
-    document.getElementById('modal-overlay').classList.add('show');
-  }
-  function closeModal() {
-    deleteTargetId = null;
-    document.getElementById('modal-overlay').classList.remove('show');
-  }
-  function confirmDelete() {
-    qas = qas.filter(q => q.id !== deleteTargetId);
-    save(); closeModal(); renderList(); showToast('Deleted.');
+  // DB STATUS
+  function setStatus(ok) {
+    document.getElementById('db-dot').className = 'db-dot'+(ok?' connected':'');
+    document.getElementById('db-label').textContent = ok ? 'Firebase Connected 🔥' : 'Disconnected';
   }
 
-  // ── FORM ──────────────────────────────────────────────────
-  function buildTagOptions() {
-    const wrap = document.getElementById('tag-options');
-    wrap.innerHTML = '';
-    TAGS.forEach(t => {
-      const btn = document.createElement('button');
-      btn.className = 'tag-opt' + (t === selectedTag ? ' active' : '');
-      btn.textContent = t;
-      btn.onclick = () => { selectedTag = t; buildTagOptions(); };
-      wrap.appendChild(btn);
-    });
-  }
-
-  function toggleForm(clear=true) {
-    const sec = document.getElementById('form-section');
-    const addBtn = document.querySelector('header .btn-green');
-    if (sec.classList.contains('show')) {
-      sec.classList.remove('show');
-      addBtn.textContent = '+ Add Q&A';
-    } else {
-      if (clear) {
-        document.getElementById('edit-id').value = '';
-        document.getElementById('f-question').value = '';
-        document.getElementById('f-answer').value = '';
-        document.getElementById('form-title').textContent = '✦ New Question';
-        document.getElementById('submit-btn').textContent = 'Save Q&A →';
-        selectedTag = TAGS[0];
-        buildTagOptions();
-      }
-      sec.classList.add('show');
-      addBtn.textContent = '✕ Close';
+  // LOAD
+  async function loadData() {
+    try {
+      const snap = await getDocs(query(collection(db, COL), orderBy('createdAt','desc')));
+      qas = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      setStatus(true);
+    } catch(e) {
+      console.error(e);
+      setStatus(false);
+      showToast('Could not load from Firebase. Check Firestore rules.','err');
     }
+    document.getElementById('page-loader').style.display = 'none';
+    buildTagOptions(); buildFilters(); renderList();
   }
 
-  function submitForm() {
-    const q = document.getElementById('f-question').value.trim();
-    const a = document.getElementById('f-answer').value.trim();
+  // SUBMIT
+  async function submitForm() {
+    const q   = document.getElementById('f-question').value.trim();
+    const a   = document.getElementById('f-answer').value.trim();
     const eid = document.getElementById('edit-id').value;
-    if (!q || !a) { showToast('Fill in both fields.', 'err'); return; }
-
-    if (eid) {
-      qas = qas.map(x => x.id === eid ? {...x, question:q, answer:a, tag:selectedTag} : x);
-      showToast('Updated!');
-    } else {
-      qas.unshift({ id: Date.now()+'', question:q, answer:a, tag:selectedTag, date:new Date().toISOString().split('T')[0] });
-      showToast('Q&A saved!');
+    if (!q || !a) { showToast('Fill in both fields.','err'); return; }
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      if (eid) {
+        await updateDoc(doc(db, COL, eid), {question:q, answer:a, tag:selectedTag});
+        showToast('Updated successfully!');
+      } else {
+        await addDoc(collection(db, COL), {
+          question:q, answer:a, tag:selectedTag,
+          date: new Date().toISOString().split('T')[0],
+          createdAt: serverTimestamp()
+        });
+        showToast('Q&A saved to Firebase! 🔥');
+      }
+      await loadData();
+      resetForm();
+      document.getElementById('form-section').classList.remove('show');
+      document.querySelector('header .btn-green').textContent = '+ Add Q&A';
+    } catch(e) {
+      console.error(e);
+      showToast('Save failed. Check Firestore rules.','err');
     }
-    save();
-    toggleForm(true);
-    renderList();
+    btn.disabled = false;
+    btn.textContent = document.getElementById('edit-id').value ? 'Update →' : 'Save Q&A →';
+  }
+
+  // DELETE
+  async function confirmDelete() {
+    try {
+      await deleteDoc(doc(db, COL, deleteTargetId));
+      showToast('Deleted from Firebase.');
+      closeModal();
+      await loadData();
+    } catch(e) { showToast('Delete failed.','err'); }
+  }
+
+  // FORM HELPERS
+  function resetForm() {
+    document.getElementById('edit-id').value = '';
+    document.getElementById('f-question').value = '';
+    document.getElementById('f-answer').value = '';
+    document.getElementById('form-title').textContent = '✦ New Question';
+    document.getElementById('submit-btn').textContent = 'Save Q&A →';
+    selectedTag = TAGS[0]; buildTagOptions();
+  }
+
+  function toggleForm() {
+    const sec = document.getElementById('form-section');
+    const btn = document.querySelector('header .btn-green');
+    if (sec.classList.contains('show')) { sec.classList.remove('show'); btn.textContent='+ Add Q&A'; }
+    else { resetForm(); sec.classList.add('show'); btn.textContent='✕ Close'; }
   }
 
   function startEdit(id) {
-    const qa = qas.find(q => q.id === id);
-    if (!qa) return;
-    document.getElementById('edit-id').value = id;
+    const qa = qas.find(q=>q.id===id); if(!qa) return;
+    document.getElementById('edit-id').value    = id;
     document.getElementById('f-question').value = qa.question;
-    document.getElementById('f-answer').value = qa.answer;
-    document.getElementById('form-title').textContent = '✏ Edit Entry';
-    document.getElementById('submit-btn').textContent = 'Update →';
-    selectedTag = qa.tag;
-    buildTagOptions();
+    document.getElementById('f-answer').value   = qa.answer;
+    document.getElementById('form-title').textContent  = '✏ Edit Entry';
+    document.getElementById('submit-btn').textContent  = 'Update →';
+    selectedTag = qa.tag; buildTagOptions();
     const sec = document.getElementById('form-section');
-    if (!sec.classList.contains('show')) toggleForm(false);
-    sec.scrollIntoView({ behavior:'smooth' });
+    if (!sec.classList.contains('show')) { sec.classList.add('show'); document.querySelector('header .btn-green').textContent='✕ Close'; }
+    sec.scrollIntoView({behavior:'smooth'});
   }
 
-  // ── FILTERS ───────────────────────────────────────────────
+  function openModal(id) { deleteTargetId=id; document.getElementById('modal-overlay').classList.add('show'); }
+  function closeModal()  { deleteTargetId=null; document.getElementById('modal-overlay').classList.remove('show'); }
+
+  // TAGS
+  function buildTagOptions() {
+    const wrap = document.getElementById('tag-options'); wrap.innerHTML='';
+    TAGS.forEach(t => {
+      const b = document.createElement('button');
+      b.className='tag-opt'+(t===selectedTag?' active':'');
+      b.textContent=t;
+      b.onclick=()=>{ selectedTag=t; buildTagOptions(); };
+      wrap.appendChild(b);
+    });
+  }
+
+  // FILTERS
   function buildFilters() {
-    const row = document.getElementById('filter-row');
-    row.innerHTML = '';
-    ['All', ...TAGS].forEach(t => {
-      const btn = document.createElement('button');
-      btn.className = 'f-tag' + (t === filterTag ? ' active' : '');
-      btn.textContent = t;
-      btn.onclick = () => { filterTag = t; buildFilters(); renderList(); };
-      row.appendChild(btn);
+    const row = document.getElementById('filter-row'); row.innerHTML='';
+    ['All',...TAGS].forEach(t => {
+      const b = document.createElement('button');
+      b.className='f-tag'+(t===filterTag?' active':'');
+      b.textContent=t;
+      b.onclick=()=>{ filterTag=t; buildFilters(); renderList(); };
+      row.appendChild(b);
     });
   }
 
-  // ── RENDER ────────────────────────────────────────────────
+  // RENDER
   function renderList() {
-    const search = document.getElementById('search-input').value.toLowerCase();
-    const list = qas.filter(q => {
-      const matchTag = filterTag === 'All' || q.tag === filterTag;
-      const matchSearch = !search || q.question.toLowerCase().includes(search) || q.answer.toLowerCase().includes(search);
-      return matchTag && matchSearch;
+    const s = document.getElementById('search-input').value.toLowerCase();
+    const list = qas.filter(q=>{
+      const mt = filterTag==='All'||q.tag===filterTag;
+      const ms = !s||q.question.toLowerCase().includes(s)||q.answer.toLowerCase().includes(s);
+      return mt&&ms;
     });
-
     document.getElementById('total-count').textContent = qas.length;
-
-    // results bar
-    let bar = `${list.length} entr${list.length===1?'y':'ies'}`;
-    if (filterTag !== 'All') bar += ` <span>· ${filterTag}</span>`;
-    if (search) bar += ` <span>· "${search}"</span>`;
-    document.getElementById('results-bar').innerHTML = bar;
-
-    const container = document.getElementById('qa-list');
-    container.innerHTML = '';
-
-    if (list.length === 0) {
-      container.innerHTML = `<div class="empty"><div class="empty-icon">◇</div>No entries found. Add your first Q&A!</div>`;
-      return;
-    }
-
-    list.forEach((qa, i) => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.style.animationDelay = `${i * 0.04}s`;
-
-      card.innerHTML = `
-        <div class="card-head" onclick="toggleCard('body-${qa.id}', 'chev-${qa.id}')">
-          <div class="card-meta">
-            <span class="tag-pill">${qa.tag}</span>
-            <span class="card-date">${qa.date}</span>
-          </div>
-          <div class="card-q">
-            <span class="q-badge">Q</span>
-            <span class="q-text">${escHtml(qa.question)}</span>
-          </div>
-          <span class="chevron" id="chev-${qa.id}">▼</span>
+    let bar=`${list.length} entr${list.length===1?'y':'ies'}`;
+    if(filterTag!=='All') bar+=` <span>· ${filterTag}</span>`;
+    if(s) bar+=` <span>· "${s}"</span>`;
+    document.getElementById('results-bar').innerHTML=bar;
+    const c=document.getElementById('qa-list'); c.innerHTML='';
+    if(!list.length){ c.innerHTML=`<div class="empty"><div class="empty-icon">◇</div>No entries found. Add your first Q&A!</div>`; return; }
+    list.forEach((qa,i)=>{
+      const card=document.createElement('div');
+      card.className='card'; card.style.animationDelay=`${i*0.04}s`;
+      card.innerHTML=`
+        <div class="card-head" onclick="toggleCard('b-${qa.id}','c-${qa.id}')">
+          <div class="card-meta"><span class="tag-pill">${qa.tag}</span><span class="card-date">${qa.date}</span></div>
+          <div class="card-q"><span class="q-badge">Q</span><span class="q-text">${esc(qa.question)}</span></div>
+          <span class="chevron" id="c-${qa.id}">▼</span>
         </div>
-        <div class="card-body" id="body-${qa.id}">
-          <div class="answer-block">
-            <span class="a-badge">A</span>
-            <p class="a-text">${escHtml(qa.answer)}</p>
-          </div>
+        <div class="card-body" id="b-${qa.id}">
+          <div class="answer-block"><span class="a-badge">A</span><p class="a-text">${esc(qa.answer)}</p></div>
           <div class="card-actions">
-            <button class="btn-edit" onclick="startEdit('${qa.id}')">✏ Edit</button>
-            <button class="btn-del-card" onclick="openModal('${qa.id}')">🗑 Delete</button>
+            <button class="btn-edit"     onclick="window._edit('${qa.id}')">✏ Edit</button>
+            <button class="btn-del-card" onclick="window._del('${qa.id}')">🗑 Delete</button>
           </div>
-        </div>
-      `;
-      container.appendChild(card);
+        </div>`;
+      c.appendChild(card);
     });
   }
 
-  function toggleCard(bodyId, chevId) {
-    const body = document.getElementById(bodyId);
-    const chev = document.getElementById(chevId);
-    const isOpen = body.classList.contains('open');
-    // close all
-    document.querySelectorAll('.card-body').forEach(b => b.classList.remove('open'));
-    document.querySelectorAll('.chevron').forEach(c => c.textContent = '▼');
-    if (!isOpen) { body.classList.add('open'); chev.textContent = '▲'; }
+  function toggleCard(bId,cId){
+    const b=document.getElementById(bId),c=document.getElementById(cId),open=b.classList.contains('open');
+    document.querySelectorAll('.card-body').forEach(x=>x.classList.remove('open'));
+    document.querySelectorAll('.chevron').forEach(x=>x.textContent='▼');
+    if(!open){b.classList.add('open');c.textContent='▲';}
   }
 
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  // ── INIT ──────────────────────────────────────────────────
-  load();
-  buildTagOptions();
-  buildFilters();
-  renderList();
+  // expose to global
+  window.toggleForm=toggleForm; window.submitForm=submitForm;
+  window.closeModal=closeModal; window.confirmDelete=confirmDelete;
+  window.toggleCard=toggleCard; window._edit=startEdit; window._del=openModal;
+
+  loadData();
 </script>
 </body>
 </html>
